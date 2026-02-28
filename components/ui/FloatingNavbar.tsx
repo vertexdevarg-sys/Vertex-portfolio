@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import {
   motion,
@@ -48,8 +49,9 @@ export const FloatingNav = ({
     }
   });
 
-  // active section observer
+  // ✅ active section observer (SSR safe)
   useEffect(() => {
+    if (typeof window === "undefined") return; // ✅ SSR guard
     if (!sections.length) return;
 
     const els = sections
@@ -63,7 +65,9 @@ export const FloatingNav = ({
         // choose the most visible entry
         const visibleEntries = entries
           .filter((e) => e.isIntersecting)
-          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0));
+          .sort(
+            (a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0)
+          );
 
         if (visibleEntries[0]?.target?.id) {
           setActive(`#${visibleEntries[0].target.id}`);
@@ -79,8 +83,9 @@ export const FloatingNav = ({
     return () => io.disconnect();
   }, [sections]);
 
-  // smooth scroll
+  // ✅ smooth scroll (SSR safe)
   const goTo = (hash: string) => {
+    if (typeof window === "undefined") return; // ✅ SSR guard
     const id = hash.replace("#", "");
     const el = document.getElementById(id);
     if (!el) return;
@@ -88,9 +93,7 @@ export const FloatingNav = ({
     el.scrollIntoView({ behavior: "smooth", block: "start" });
 
     // update URL hash without jump
-    if (typeof window !== "undefined") {
-      window.history.replaceState(null, "", hash);
-    }
+    window.history.replaceState(null, "", hash);
   };
 
   return (
@@ -112,6 +115,7 @@ export const FloatingNav = ({
       >
         {navItems.map((navItem, idx) => {
           const isActive = active === navItem.link;
+
           return (
             <button
               key={`link=${idx}`}
